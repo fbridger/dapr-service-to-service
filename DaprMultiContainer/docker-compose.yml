@@ -1,6 +1,11 @@
 version: '3.4'
 
 services:
+  zipkin:
+    image: openzipkin/zipkin-slim
+    ports:
+      - "9411:9411"
+
   daprfrontend:
     image: ${DOCKER_REGISTRY-}daprfrontend
     build:
@@ -11,10 +16,16 @@ services:
 
   daprfrontend-dapr:
     image: "daprio/daprd:latest"
-    command: [ "./daprd", "-app-id", "daprfrontend", "-app-port", "80" ]
+    command: [ "./daprd", 
+      "-app-id", "daprfrontend", 
+      "-app-port", "80",
+      "-config", "/configuration/dapr-config.yaml"
+      ]
     depends_on:
       - daprfrontend
     network_mode: "service:daprfrontend"
+    volumes:
+      - "./configuration/:/configuration"
 
   daprbackend:
     image: ${DOCKER_REGISTRY-}daprbackend
@@ -26,7 +37,13 @@ services:
 
   daprbackend-dapr:
     image: "daprio/daprd:latest"
-    command: [ "./daprd", "-app-id", "daprbackend", "-app-port", "80" ]
+    command: [ "./daprd", 
+      "-app-id", "daprbackend",
+      "-app-port", "80",
+      "-config", "/configuration/dapr-config.yaml"
+      ]
     depends_on:
       - daprbackend
     network_mode: "service:daprbackend"
+    volumes:
+      - "./configuration/:/configuration"
